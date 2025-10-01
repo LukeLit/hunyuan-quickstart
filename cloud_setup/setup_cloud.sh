@@ -397,7 +397,13 @@ if [ "$HF_AUTHENTICATED" = true ]; then
         echo "   python sample_video.py --help"
     fi
     echo ""
-    echo "3. Start generating!"
+    echo "3. 🌐 Start Web API (NEW!):"
+    echo "   cd /workspace/hunyuan-quickstart/web_api"
+    echo "   pip install -r requirements.txt"
+    echo "   python start_server.py"
+    echo "   # Then visit: http://localhost:5000"
+    echo ""
+    echo "4. Start generating!"
 else
     echo "1. Download model weights:"
     echo "   - Run: hf auth login"
@@ -416,7 +422,13 @@ else
         echo "   python sample_video.py --help"
     fi
     echo ""
-    echo "3. Start generating!"
+    echo "3. 🌐 Start Web API (NEW!):"
+    echo "   cd /workspace/hunyuan-quickstart/web_api"
+    echo "   pip install -r requirements.txt"
+    echo "   python start_server.py"
+    echo "   # Then visit: http://localhost:5000"
+    echo ""
+    echo "4. Start generating!"
 fi
 echo ""
 echo "Useful commands:"

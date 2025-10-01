@@ -204,7 +204,7 @@ read -p "Enter your Hugging Face token (or press Enter to skip): " hf_token
 
 if [ ! -z "$hf_token" ]; then
     print_status "Logging into Hugging Face..."
-    huggingface-cli login --token "$hf_token"
+    hf auth login --token "$hf_token"
     if [ $? -eq 0 ]; then
         print_status "Hugging Face authentication successful!"
         HF_AUTHENTICATED=true
@@ -252,24 +252,24 @@ if [ "$install_i2v" = true ]; then
         echo "================================================"
         echo ""
         print_status "Downloading main model (this may take 10-60 minutes)..."
-        huggingface-cli download tencent/HunyuanVideo-I2V --local-dir ./ckpts
+        hf download tencent/HunyuanVideo-I2V --local-dir ./ckpts
         
         print_status "Downloading MLLM text encoder..."
         cd ckpts
-        huggingface-cli download xtuner/llava-llama-3-8b-v1_1-transformers --local-dir ./text_encoder_i2v
+        hf download xtuner/llava-llama-3-8b-v1_1-transformers --local-dir ./text_encoder_i2v
         
         print_status "Downloading CLIP text encoder..."
-        huggingface-cli download openai/clip-vit-large-patch14 --local-dir ./text_encoder_2
+        hf download openai/clip-vit-large-patch14 --local-dir ./text_encoder_2
         cd ..
         
         print_status "All HunyuanVideo-I2V weights downloaded successfully!"
     else
         print_warning "Skipping weight download. Run these commands manually after setup:"
         echo "  cd $MODELS_DIR/HunyuanVideo-I2V"
-        echo "  huggingface-cli download tencent/HunyuanVideo-I2V --local-dir ./ckpts"
+        echo "  hf download tencent/HunyuanVideo-I2V --local-dir ./ckpts"
         echo "  cd ckpts"
-        echo "  huggingface-cli download xtuner/llava-llama-3-8b-v1_1-transformers --local-dir ./text_encoder_i2v"
-        echo "  huggingface-cli download openai/clip-vit-large-patch14 --local-dir ./text_encoder_2"
+        echo "  hf download xtuner/llava-llama-3-8b-v1_1-transformers --local-dir ./text_encoder_i2v"
+        echo "  hf download openai/clip-vit-large-patch14 --local-dir ./text_encoder_2"
     fi
     
     print_status "HunyuanVideo-I2V environment ready!"
@@ -338,7 +338,7 @@ if [ "$HF_AUTHENTICATED" = true ]; then
     echo "3. Start generating!"
 else
     echo "1. Download model weights:"
-    echo "   - Run: huggingface-cli login"
+    echo "   - Run: hf auth login"
     echo "   - Enter your HF token from: https://huggingface.co/settings/tokens"
     echo "   - Follow instructions in each model's ckpts/README.md"
     echo ""

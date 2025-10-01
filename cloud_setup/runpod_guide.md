@@ -124,7 +124,7 @@ cd /workspace/HunyuanVideo-I2V
 **Tip:** Use Hugging Face CLI for faster downloads:
 ```bash
 pip install huggingface-hub
-huggingface-cli login
+hf auth login
 # Enter your HF token
 ```
 

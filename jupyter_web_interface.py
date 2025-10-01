@@ -153,7 +153,7 @@ class HunyuanVideoInterface:
                     # Activate conda environment and run the model
                     cmd = [
                         "bash", "-c",
-                        f"eval \"$(conda shell.bash hook)\" && conda activate hunyuan-i2v && python sample_image2video.py --image_path {image_path} --prompt '{self.prompt_text.value}' --video_length {self.video_length.value} --infer_steps {self.infer_steps.value} --i2v_resolution {self.resolution.value}"
+                        f"eval \"$(conda shell.bash hook)\" && conda activate hunyuan-i2v && python sample_image2video.py --i2v-mode --i2v-image-path {image_path} --prompt '{self.prompt_text.value}' --video-length {self.video_length.value} --infer-steps {self.infer_steps.value} --i2v-resolution {self.resolution.value}"
                     ]
                     
                     print("⚡ Executing command...")

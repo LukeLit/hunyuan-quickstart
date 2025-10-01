@@ -55,6 +55,7 @@ RunPod is a cloud GPU rental service that provides access to powerful GPUs on-de
    - Container Disk: 50GB (minimum)
    - Volume Disk: 200GB+ (recommended)
    - ✅ Check "Use Volume" for persistent storage
+   - **IMPORTANT**: HunyuanVideo-I2V requires ~30GB for model weights alone
 
 6. **Choose Instance Type:**
    - **On-Demand:** Guaranteed availability, higher cost
@@ -198,12 +199,32 @@ scp -P [PORT] root@[IP]:/workspace/results/*.mp4 ./local_folder/
 
 **Compare to buying A100 80GB:** $10,000-15,000
 
+## 💾 Storage Requirements
+
+### Model Storage Needs
+- **HunyuanVideo-I2V**: ~30GB (main model + text encoders)
+- **HunyuanVideo**: ~30GB
+- **Hunyuan3D**: ~20GB
+- **HunyuanWorld**: ~60GB
+- **Recommended total**: 200GB+ for full suite
+
+### Storage Tips
+- ✅ Use persistent volumes to avoid re-downloading weights
+- ✅ Download models to `/workspace` (persistent volume)
+- ✅ Check available space before downloading: `df -h`
+- ❌ Don't download to `/tmp` (temporary, gets cleared)
+
 ## 🔧 Troubleshooting
 
 ### Pod Won't Start
 - Try different region/data center
 - Check if credits are sufficient
 - Wait a few minutes (high demand)
+
+### Disk Space Issues
+- **"No space left on device"**: Upgrade RunPod storage
+- **"Disk quota exceeded"**: Use larger volume disk
+- **Check space**: `df -h` and `du -h --max-depth=1`
 
 ### Conda Issues
 - **"conda: command not found"**: Restart terminal or run `source ~/.bashrc`

@@ -85,7 +85,22 @@ fi
 print_status "Upgrading pip..."
 python3 -m pip install --upgrade pip -q
 
-# Step 6: Create directories
+# Step 6: Check disk space and create directories
+print_status "Checking disk space..."
+AVAILABLE_SPACE=$(df -BG "$WORKSPACE_DIR" | tail -1 | awk '{print $4}' | sed 's/G//')
+REQUIRED_SPACE=35  # 35GB for full HunyuanVideo-I2V setup
+
+if [ "$AVAILABLE_SPACE" -lt "$REQUIRED_SPACE" ]; then
+    print_error "Insufficient disk space!"
+    print_error "Available: ${AVAILABLE_SPACE}GB"
+    print_error "Required: ${REQUIRED_SPACE}GB"
+    print_warning "Please upgrade your RunPod instance storage or use a different instance."
+    print_warning "HunyuanVideo-I2V requires ~30GB for model weights alone."
+    exit 1
+else
+    print_status "Disk space check passed: ${AVAILABLE_SPACE}GB available"
+fi
+
 print_status "Creating workspace directories..."
 mkdir -p "$MODELS_DIR"
 mkdir -p "$CHECKPOINTS_DIR"

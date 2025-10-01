@@ -137,9 +137,23 @@ class HunyuanInstallerGUI:
         self.dir_entry.insert(0, str(self.install_dir))
         self.dir_entry.pack(side=tk.LEFT, padx=5)
         
+        # Hugging Face Token
+        hf_frame = ttk.Frame(self.root, padding="10")
+        hf_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), padx=10)
+        
+        ttk.Label(hf_frame, text="Hugging Face Token (optional):").pack(side=tk.LEFT)
+        self.hf_token_entry = ttk.Entry(hf_frame, width=50, show="*")
+        self.hf_token_entry.pack(side=tk.LEFT, padx=5)
+        
+        ttk.Button(
+            hf_frame,
+            text="Get Token",
+            command=self.open_hf_token_page
+        ).pack(side=tk.LEFT, padx=5)
+        
         # Action Buttons
         action_frame = ttk.Frame(self.root, padding="10")
-        action_frame.grid(row=4, column=0, sticky=(tk.W, tk.E))
+        action_frame.grid(row=5, column=0, sticky=(tk.W, tk.E))
         
         self.install_btn = ttk.Button(
             action_frame,
@@ -163,19 +177,19 @@ class HunyuanInstallerGUI:
         
         # Progress Log
         log_frame = ttk.LabelFrame(self.root, text="Installation Log", padding="10")
-        log_frame.grid(row=5, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=10, pady=5)
+        log_frame.grid(row=6, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=10, pady=5)
         
         self.log_text = scrolledtext.ScrolledText(log_frame, height=15, wrap=tk.WORD)
         self.log_text.pack(fill=tk.BOTH, expand=True)
         
         # Progress Bar
         self.progress = ttk.Progressbar(self.root, mode='indeterminate')
-        self.progress.grid(row=6, column=0, sticky=(tk.W, tk.E), padx=10, pady=5)
+        self.progress.grid(row=7, column=0, sticky=(tk.W, tk.E), padx=10, pady=5)
         
         # Configure grid weights
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(2, weight=1)
-        self.root.rowconfigure(5, weight=2)
+        self.root.rowconfigure(6, weight=2)
         
     def log(self, message: str):
         """Add message to log"""
@@ -228,6 +242,11 @@ GPU Check:
                 return 'microsoft' in f.read().lower()
         except:
             return False
+            
+    def open_hf_token_page(self):
+        """Open Hugging Face token page in browser"""
+        import webbrowser
+        webbrowser.open("https://huggingface.co/settings/tokens")
             
     def show_cloud_guide(self):
         """Show cloud GPU setup guide"""

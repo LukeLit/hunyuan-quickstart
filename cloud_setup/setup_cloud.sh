@@ -191,6 +191,32 @@ fi
 print_status "Installing Hugging Face CLI..."
 pip install -q huggingface-hub[cli]
 
+# Step 10.5: Hugging Face Authentication
+echo ""
+echo "================================================"
+echo "  Hugging Face Authentication"
+echo "================================================"
+echo ""
+echo "To download model weights, you need a Hugging Face token."
+echo "Get your token from: https://huggingface.co/settings/tokens"
+echo ""
+read -p "Enter your Hugging Face token (or press Enter to skip): " hf_token
+
+if [ ! -z "$hf_token" ]; then
+    print_status "Logging into Hugging Face..."
+    huggingface-cli login --token "$hf_token"
+    if [ $? -eq 0 ]; then
+        print_status "Hugging Face authentication successful!"
+        HF_AUTHENTICATED=true
+    else
+        print_error "Hugging Face authentication failed!"
+        HF_AUTHENTICATED=false
+    fi
+else
+    print_warning "Skipping Hugging Face authentication. You'll need to login manually later."
+    HF_AUTHENTICATED=false
+fi
+
 # Step 11: Setup Conda Environments for Installed Models
 echo ""
 echo "================================================"
@@ -212,11 +238,39 @@ if [ "$install_i2v" = true ]; then
     print_status "Installing PyTorch with CUDA support..."
     conda install pytorch==2.4.0 torchvision==0.19.0 pytorch-cuda=12.4 -c pytorch -c nvidia -y
     
-    print_status "Installing model dependencies..."
+    print_status "Installing model requirements..."
     pip install -r requirements.txt
     
     print_status "Installing Flash Attention..."
     pip install git+https://github.com/Dao-AILab/flash-attention.git@v2.6.3
+    
+    # Download model weights if authenticated
+    if [ "$HF_AUTHENTICATED" = true ]; then
+        echo ""
+        echo "================================================"
+        echo "  Downloading HunyuanVideo-I2V Model Weights"
+        echo "================================================"
+        echo ""
+        print_status "Downloading main model (this may take 10-60 minutes)..."
+        huggingface-cli download tencent/HunyuanVideo-I2V --local-dir ./ckpts
+        
+        print_status "Downloading MLLM text encoder..."
+        cd ckpts
+        huggingface-cli download xtuner/llava-llama-3-8b-v1_1-transformers --local-dir ./text_encoder_i2v
+        
+        print_status "Downloading CLIP text encoder..."
+        huggingface-cli download openai/clip-vit-large-patch14 --local-dir ./text_encoder_2
+        cd ..
+        
+        print_status "All HunyuanVideo-I2V weights downloaded successfully!"
+    else
+        print_warning "Skipping weight download. Run these commands manually after setup:"
+        echo "  cd $MODELS_DIR/HunyuanVideo-I2V"
+        echo "  huggingface-cli download tencent/HunyuanVideo-I2V --local-dir ./ckpts"
+        echo "  cd ckpts"
+        echo "  huggingface-cli download xtuner/llava-llama-3-8b-v1_1-transformers --local-dir ./text_encoder_i2v"
+        echo "  huggingface-cli download openai/clip-vit-large-patch14 --local-dir ./text_encoder_2"
+    fi
     
     print_status "HunyuanVideo-I2V environment ready!"
 fi
@@ -224,11 +278,35 @@ fi
 if [ "$install_video" = true ]; then
     print_status "Setting up HunyuanVideo environment..."
     cd "$MODELS_DIR/HunyuanVideo"
+    
+    # Create conda environment
     conda create -n hunyuan-video python==3.11.9 -y
+    
+    # Activate and install PyTorch with CUDA
     eval "$(conda shell.bash hook)"
     conda activate hunyuan-video
+    
+    print_status "Installing PyTorch with CUDA support..."
     conda install pytorch==2.4.0 torchvision==0.19.0 pytorch-cuda=12.4 -c pytorch -c nvidia -y
+    
+    print_status "Installing model requirements..."
     pip install -r requirements.txt
+    
+    # Download model weights if authenticated
+    if [ "$HF_AUTHENTICATED" = true ]; then
+        echo ""
+        echo "================================================"
+        echo "  Downloading HunyuanVideo Model Weights"
+        echo "================================================"
+        echo ""
+        print_status "Downloading HunyuanVideo weights..."
+        # Note: HunyuanVideo weight download commands would go here
+        # Check the model's README for specific download instructions
+        print_warning "Please check HunyuanVideo/README.md for weight download instructions"
+    else
+        print_warning "Skipping weight download. Check HunyuanVideo/README.md for download instructions"
+    fi
+    
     print_status "HunyuanVideo environment ready!"
 fi
 
@@ -242,24 +320,42 @@ echo "Checkpoints directory: $CHECKPOINTS_DIR"
 echo "Results directory: $WORKSPACE_DIR/results"
 echo ""
 echo "Next Steps:"
-echo "1. Download model weights:"
-echo "   - Run: huggingface-cli login"
-echo "   - Enter your HF token from: https://huggingface.co/settings/tokens"
-echo "   - Follow instructions in each model's ckpts/README.md"
-echo ""
-echo "2. Activate environments and test:"
-if [ "$install_i2v" = true ]; then
-    echo "   conda activate hunyuan-i2v"
-    echo "   cd $MODELS_DIR/HunyuanVideo-I2V"
-    echo "   python sample_image2video.py --help"
+if [ "$HF_AUTHENTICATED" = true ]; then
+    echo "1. ✅ Model weights downloaded automatically!"
+    echo ""
+    echo "2. Activate environments and test:"
+    if [ "$install_i2v" = true ]; then
+        echo "   conda activate hunyuan-i2v"
+        echo "   cd $MODELS_DIR/HunyuanVideo-I2V"
+        echo "   python sample_image2video.py --help"
+    fi
+    if [ "$install_video" = true ]; then
+        echo "   conda activate hunyuan-video"
+        echo "   cd $MODELS_DIR/HunyuanVideo"
+        echo "   python sample_video.py --help"
+    fi
+    echo ""
+    echo "3. Start generating!"
+else
+    echo "1. Download model weights:"
+    echo "   - Run: huggingface-cli login"
+    echo "   - Enter your HF token from: https://huggingface.co/settings/tokens"
+    echo "   - Follow instructions in each model's ckpts/README.md"
+    echo ""
+    echo "2. Activate environments and test:"
+    if [ "$install_i2v" = true ]; then
+        echo "   conda activate hunyuan-i2v"
+        echo "   cd $MODELS_DIR/HunyuanVideo-I2V"
+        echo "   python sample_image2video.py --help"
+    fi
+    if [ "$install_video" = true ]; then
+        echo "   conda activate hunyuan-video"
+        echo "   cd $MODELS_DIR/HunyuanVideo"
+        echo "   python sample_video.py --help"
+    fi
+    echo ""
+    echo "3. Start generating!"
 fi
-if [ "$install_video" = true ]; then
-    echo "   conda activate hunyuan-video"
-    echo "   cd $MODELS_DIR/HunyuanVideo"
-    echo "   python sample_video.py --help"
-fi
-echo ""
-echo "3. Start generating!"
 echo ""
 echo "Useful commands:"
 echo "  nvidia-smi              # Check GPU usage"

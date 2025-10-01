@@ -10,8 +10,10 @@ RunPod is a cloud GPU rental service that provides access to powerful GPUs on-de
 
 | GPU Type | VRAM | On-Demand | Spot (Interruptible) |
 |----------|------|-----------|---------------------|
-| A100 80GB | 80GB | $1.89/hour | $1.29/hour |
-| A40 | 48GB | $0.79/hour | $0.59/hour |
+| A100 80GB PCIe | 80GB | $1.64/hour | $0.82/hour |
+| A100 80GB SXM | 80GB | $1.74/hour | $0.87/hour |
+| H100 80GB PCIe | 80GB | $2.15/hour | $1.08/hour |
+| A40 | 48GB | $0.40/hour | $0.20/hour |
 
 **Storage:** ~$0.10/GB/month for persistent volumes
 
@@ -179,20 +181,20 @@ scp -P [PORT] root@[IP]:/workspace/results/*.mp4 ./local_folder/
 
 ### Scenario 1: Casual User
 - 5 hours/week video generation
-- A100 80GB Spot: $1.29/hour
-- **Weekly cost:** $6.45
-- **Monthly cost:** ~$26
+- A100 80GB PCIe Spot: $0.82/hour
+- **Weekly cost:** $4.10
+- **Monthly cost:** ~$16
 
 ### Scenario 2: Heavy User
 - 20 hours/week
-- A100 80GB On-Demand: $1.89/hour
-- **Weekly cost:** $37.80
-- **Monthly cost:** ~$151
+- A100 80GB PCIe On-Demand: $1.64/hour
+- **Weekly cost:** $32.80
+- **Monthly cost:** ~$131
 
 ### Scenario 3: Project Work
 - 40 hours total for a project
-- A100 80GB Spot: $1.29/hour
-- **Total cost:** $51.60
+- A100 80GB PCIe Spot: $0.82/hour
+- **Total cost:** $32.80
 
 **Compare to buying A100 80GB:** $10,000-15,000
 
@@ -202,6 +204,15 @@ scp -P [PORT] root@[IP]:/workspace/results/*.mp4 ./local_folder/
 - Try different region/data center
 - Check if credits are sufficient
 - Wait a few minutes (high demand)
+
+### Conda Issues
+- **"conda: command not found"**: Restart terminal or run `source ~/.bashrc`
+- **Terms of Service error**: Run these commands:
+  ```bash
+  conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+  conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+  ```
+- **Environment activation issues**: Use `eval "$(conda shell.bash hook)"` before activating
 
 ### Out of Memory Error
 - Close other applications
@@ -221,6 +232,10 @@ scp -P [PORT] root@[IP]:/workspace/results/*.mp4 ./local_folder/
 - Try SSH option instead
 - Check firewall settings
 - Restart pod
+
+### Setup Script Issues
+- If conda installation fails, restart terminal and run script again
+- For permission errors, ensure you're running as root or with sudo
 
 ## 📁 Recommended Directory Structure
 

@@ -100,9 +100,18 @@ if ! command -v conda &> /dev/null; then
     eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
     conda init
     print_status "Conda installed. Please restart your shell or run: source ~/.bashrc"
+    print_warning "IMPORTANT: You must restart your terminal or run 'source ~/.bashrc' before continuing!"
+    print_warning "Then run this script again or continue manually with the next steps."
+    exit 0
 else
     print_status "Conda already installed"
 fi
+
+# Step 7.5: Accept Conda Terms of Service
+print_status "Accepting Conda Terms of Service..."
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+print_status "Conda Terms of Service accepted"
 
 # Step 8: Interactive Model Selection
 echo ""
@@ -182,6 +191,47 @@ fi
 print_status "Installing Hugging Face CLI..."
 pip install -q huggingface-hub[cli]
 
+# Step 11: Setup Conda Environments for Installed Models
+echo ""
+echo "================================================"
+echo "  Setting up Conda Environments"
+echo "================================================"
+echo ""
+
+if [ "$install_i2v" = true ]; then
+    print_status "Setting up HunyuanVideo-I2V environment..."
+    cd "$MODELS_DIR/HunyuanVideo-I2V"
+    
+    # Create conda environment
+    conda create -n hunyuan-i2v python==3.11.9 -y
+    
+    # Activate and install PyTorch with CUDA
+    eval "$(conda shell.bash hook)"
+    conda activate hunyuan-i2v
+    
+    print_status "Installing PyTorch with CUDA support..."
+    conda install pytorch==2.4.0 torchvision==0.19.0 pytorch-cuda=12.4 -c pytorch -c nvidia -y
+    
+    print_status "Installing model dependencies..."
+    pip install -r requirements.txt
+    
+    print_status "Installing Flash Attention..."
+    pip install git+https://github.com/Dao-AILab/flash-attention.git@v2.6.3
+    
+    print_status "HunyuanVideo-I2V environment ready!"
+fi
+
+if [ "$install_video" = true ]; then
+    print_status "Setting up HunyuanVideo environment..."
+    cd "$MODELS_DIR/HunyuanVideo"
+    conda create -n hunyuan-video python==3.11.9 -y
+    eval "$(conda shell.bash hook)"
+    conda activate hunyuan-video
+    conda install pytorch==2.4.0 torchvision==0.19.0 pytorch-cuda=12.4 -c pytorch -c nvidia -y
+    pip install -r requirements.txt
+    print_status "HunyuanVideo environment ready!"
+fi
+
 echo ""
 echo "================================================"
 echo "  ✓ Setup Complete!"
@@ -197,11 +247,17 @@ echo "   - Run: huggingface-cli login"
 echo "   - Enter your HF token from: https://huggingface.co/settings/tokens"
 echo "   - Follow instructions in each model's ckpts/README.md"
 echo ""
-echo "2. Create conda environments for each model:"
-echo "   cd $MODELS_DIR/HunyuanVideo-I2V"
-echo "   conda create -n hunyuan-i2v python==3.11.9"
-echo "   conda activate hunyuan-i2v"
-echo "   pip install -r requirements.txt"
+echo "2. Activate environments and test:"
+if [ "$install_i2v" = true ]; then
+    echo "   conda activate hunyuan-i2v"
+    echo "   cd $MODELS_DIR/HunyuanVideo-I2V"
+    echo "   python sample_image2video.py --help"
+fi
+if [ "$install_video" = true ]; then
+    echo "   conda activate hunyuan-video"
+    echo "   cd $MODELS_DIR/HunyuanVideo"
+    echo "   python sample_video.py --help"
+fi
 echo ""
 echo "3. Start generating!"
 echo ""
@@ -210,6 +266,7 @@ echo "  nvidia-smi              # Check GPU usage"
 echo "  htop                    # Check CPU/RAM"
 echo "  df -h                   # Check disk space"
 echo "  tmux                    # Keep sessions running"
+echo "  conda env list          # List all environments"
 echo ""
 echo "================================================"
 

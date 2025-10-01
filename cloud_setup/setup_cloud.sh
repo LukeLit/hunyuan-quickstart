@@ -239,19 +239,39 @@ echo "  Setting up Conda Environments"
 echo "================================================"
 echo ""
 
-if [ "$install_i2v" = true ]; then
-    print_status "Setting up HunyuanVideo-I2V environment..."
-    cd "$MODELS_DIR/HunyuanVideo-I2V"
+    if [ "$install_i2v" = true ]; then
+        print_status "Setting up HunyuanVideo-I2V environment..."
+        
+        # Check if directory exists and remove if corrupted
+        if [ -d "$MODELS_DIR/HunyuanVideo-I2V" ]; then
+            print_warning "HunyuanVideo-I2V directory already exists. Removing to ensure clean installation..."
+            rm -rf "$MODELS_DIR/HunyuanVideo-I2V"
+        fi
+        
+        cd "$MODELS_DIR/HunyuanVideo-I2V"
     
-    # Create conda environment
-    conda create -n hunyuan-i2v python==3.11.9 -y
+    # Create conda environment with error handling
+    print_status "Creating conda environment..."
+    if ! conda create -n hunyuan-i2v python==3.11.9 -y; then
+        print_error "Failed to create conda environment. This might be due to:"
+        print_error "1. Corrupted conda installation"
+        print_error "2. Network connectivity issues"
+        print_error "3. Disk space problems"
+        print_warning "Try running: conda clean --all && conda env remove -n hunyuan-i2v"
+        exit 1
+    fi
     
-    # Activate and install PyTorch with CUDA
-    eval "$(conda shell.bash hook)"
-    conda activate hunyuan-i2v
-    
-    print_status "Installing PyTorch with CUDA support..."
-    conda install pytorch==2.4.0 torchvision==0.19.0 pytorch-cuda=12.4 -c pytorch -c nvidia -y
+        # Activate and install PyTorch with CUDA
+        eval "$(conda shell.bash hook)"
+        conda activate hunyuan-i2v
+
+        print_status "Installing PyTorch with CUDA support..."
+        # Use pip for PyTorch installation (more reliable than conda)
+        pip install torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu124
+        
+        # Verify PyTorch installation
+        print_status "Verifying PyTorch installation..."
+        python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda}')"
     
     print_status "Installing model requirements..."
     pip install -r requirements.txt
@@ -259,15 +279,34 @@ if [ "$install_i2v" = true ]; then
     print_status "Installing Flash Attention..."
     pip install git+https://github.com/Dao-AILab/flash-attention.git@v2.6.3
     
-    # Download model weights if authenticated
-    if [ "$HF_AUTHENTICATED" = true ]; then
-        echo ""
-        echo "================================================"
-        echo "  Downloading HunyuanVideo-I2V Model Weights"
-        echo "================================================"
-        echo ""
-        print_status "Downloading main model (this may take 10-60 minutes)..."
-        hf download tencent/HunyuanVideo-I2V --local-dir ./ckpts
+        # Download model weights if authenticated
+        if [ "$HF_AUTHENTICATED" = true ]; then
+            echo ""
+            echo "================================================"
+            echo "  Downloading HunyuanVideo-I2V Model Weights"
+            echo "================================================"
+            echo ""
+            print_status "Downloading main model (this may take 10-60 minutes)..."
+            print_warning "IMPORTANT: Keep this terminal open during download!"
+            print_warning "If connection is lost, you can resume by running the installer again."
+            
+            # Retry logic for downloads
+            max_retries=3
+            retry_count=0
+            while [ $retry_count -lt $max_retries ]; do
+                if hf download tencent/HunyuanVideo-I2V --local-dir ./ckpts; then
+                    print_status "Main model download successful!"
+                    break
+                else
+                    retry_count=$((retry_count + 1))
+                    if [ $retry_count -lt $max_retries ]; then
+                        print_warning "Download failed, retrying... (attempt $((retry_count + 1))/$max_retries)"
+                        sleep 10
+                    else
+                        print_error "Download failed after $max_retries attempts. Please try again manually."
+                    fi
+                fi
+            done
         
         print_status "Downloading MLLM text encoder..."
         cd ckpts

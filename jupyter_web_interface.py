@@ -120,7 +120,12 @@ class HunyuanVideoInterface:
             print(f"📐 Resolution: {self.resolution.value}")
             
             # Save uploaded image
-            uploaded_file = list(self.file_upload.value.values())[0]
+            if isinstance(self.file_upload.value, tuple):
+                # Handle tuple format
+                uploaded_file = self.file_upload.value[0]
+            else:
+                # Handle dict format
+                uploaded_file = list(self.file_upload.value.values())[0]
             
             # Create temporary directory
             with tempfile.TemporaryDirectory() as temp_dir:

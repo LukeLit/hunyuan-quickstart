@@ -33,6 +33,10 @@ print_warning() {
     echo -e "${YELLOW}[!]${NC} $1"
 }
 
+print_progress() {
+    echo -e "${GREEN}[→]${NC} $1"
+}
+
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then 
     print_warning "Not running as root. Some commands may require sudo."
@@ -265,19 +269,22 @@ echo ""
         eval "$(conda shell.bash hook)"
         conda activate hunyuan-i2v
 
-        print_status "Installing PyTorch with CUDA support..."
+        print_progress "Installing PyTorch with CUDA support..."
+        print_warning "This may take 5-10 minutes (installing quietly)..."
         # Use pip for PyTorch installation (more reliable than conda)
-        pip install torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu124
+        pip install torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu124 --quiet
         
         # Verify PyTorch installation
         print_status "Verifying PyTorch installation..."
         python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda}')"
     
-    print_status "Installing model requirements..."
-    pip install -r requirements.txt
+    print_progress "Installing model requirements..."
+    print_warning "Installing Python packages (installing quietly)..."
+    pip install -r requirements.txt --quiet
     
-    print_status "Installing Flash Attention..."
-    pip install git+https://github.com/Dao-AILab/flash-attention.git@v2.6.3
+    print_progress "Installing Flash Attention..."
+    print_warning "Building Flash Attention from source (this may take a few minutes)..."
+    pip install git+https://github.com/Dao-AILab/flash-attention.git@v2.6.3 --quiet
     
         # Download model weights if authenticated
         if [ "$HF_AUTHENTICATED" = true ]; then
@@ -294,13 +301,14 @@ echo ""
             max_retries=3
             retry_count=0
             while [ $retry_count -lt $max_retries ]; do
-                if hf download tencent/HunyuanVideo-I2V --local-dir ./ckpts; then
+                print_status "Starting download attempt $((retry_count + 1))/$max_retries..."
+                if hf download tencent/HunyuanVideo-I2V --local-dir ./ckpts --quiet; then
                     print_status "Main model download successful!"
                     break
                 else
                     retry_count=$((retry_count + 1))
                     if [ $retry_count -lt $max_retries ]; then
-                        print_warning "Download failed, retrying... (attempt $((retry_count + 1))/$max_retries)"
+                        print_warning "Download failed, retrying in 10 seconds... (attempt $((retry_count + 1))/$max_retries)"
                         sleep 10
                     else
                         print_error "Download failed after $max_retries attempts. Please try again manually."
@@ -310,10 +318,10 @@ echo ""
         
         print_status "Downloading MLLM text encoder..."
         cd ckpts
-        hf download xtuner/llava-llama-3-8b-v1_1-transformers --local-dir ./text_encoder_i2v
-        
+        hf download xtuner/llava-llama-3-8b-v1_1-transformers --local-dir ./text_encoder_i2v --quiet
+
         print_status "Downloading CLIP text encoder..."
-        hf download openai/clip-vit-large-patch14 --local-dir ./text_encoder_2
+        hf download openai/clip-vit-large-patch14 --local-dir ./text_encoder_2 --quiet
         cd ..
         
         print_status "All HunyuanVideo-I2V weights downloaded successfully!"

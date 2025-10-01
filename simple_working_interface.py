@@ -254,7 +254,7 @@ def run_video_generation(job_id, image_path, prompt, video_length, infer_steps, 
         # Run the command
         cmd = [
             "bash", "-c",
-            f"cd {model_dir} && eval \"$(conda shell.bash hook)\" && conda activate hunyuan-i2v && python sample_image2video.py --i2v-mode --i2v-image-path {image_path} --prompt '{prompt}' --video-length {video_length} --infer-steps {infer_steps} --i2v-resolution {resolution}"
+            f"cd {model_dir} && eval \"$(conda shell.bash hook)\" && conda activate hunyuan-i2v && python sample_image2video.py --i2v-mode --i2v-image-path {image_path} --prompt '{prompt}' --video-length {video_length} --infer-steps {infer_steps} --i2v-resolution {resolution} --cfg-scale 1.0"
         ]
         
         jobs[job_id]['message'] = 'Running HunyuanVideo-I2V model...'
